@@ -1,0 +1,448 @@
+{%extends "base.html"%}
+{%load social_share%}
+{%load static%}
+<html>
+<!-- <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> -->
+<!-- <html> -->
+{%block content%}
+ {% if request.user.is_authenticated %}
+<header>
+
+    <div class="my-5 text-center container">
+<!--            <h1 class="my-5"> These are your files:</h1>-->
+        <h1><strong>{{ directory_name }}</strong></h1>
+
+        <br>
+            <div class="iconmenu" >
+
+        <a onclick="history.back()" class="btn btn-dark" style="color:white;">Back</a>&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+        <a href="{% url 'uploadfile' %}" class="btn btn" ><i class="fa-solid fa-file-circle-plus fa-3x"></i></a>
+
+<!--        create folder modal starts here-->
+
+                <!-- Button trigger modal2 -->
+          <button type="button" class="btn btn" data-toggle="modal" data-target="#exampleModal2"><i class="fa-solid fa-folder-plus fa-3x"></i></button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel2"><strong>Create Folder</strong></h5>
+                    <div class="buttons">
+                        <!-- <button type="submit" class="btn btn"><i class="fa-solid fa-folder-plus fa-2x"></i></button> -->
+                        <button type="button" class="btn btn-close-dark" data-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark fa-2x"></i></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                  <form method="post" enctype="multipart/form-data" action="{% url 'createFolder' %}">
+                    {{ form.as_p }}
+                      {% csrf_token %}
+
+                    <input type="text" name="folder_name" placeholder="Enter folder name">
+                   <button type="submit" class="btn btn"><i class="fa-solid fa-folder-plus fa-2x"></i></button>
+                  </form>
+
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+<!--        modal ends here-->
+
+
+
+    </div>
+        <div>
+            <form id="actionForm" method="post" >
+             {% csrf_token %}
+                <input type="hidden" name="targets" id="fileTargets">
+                <button type="submit" class="btn btn" id="submitAction"><i class="fa-solid fa-download fa-3x"></i></button>
+        </form>
+        </div>
+
+    </div>
+
+
+</header>
+
+<body>
+
+
+
+<!-- <ul> -->
+<div id="testingDiv">
+
+<table class="table mb-0">
+  <thead>
+    <tr>
+        <th>Select</th>
+        <th>Folder/File</th>
+        <th>Rename</th>
+        <th>Delete</th>
+
+        <th>Move</th>
+        <th>Share</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for basename, link_target in directory_directories %}
+<tr>
+    <td>
+        <input type ="checkbox" value="{{ link_target }}" name="itemcheckbox">
+
+    </td>
+
+  <td>
+  {% if link_target %}
+    <h5><a href="{% url 'directory_browse' link_target %}" style="text-decoration:none;color:black;">{{ basename }}</a></h5>
+
+  {% else %}
+    <h5>{{ basename }}/here</h5>
+  {% endif %}
+  </td>
+
+<td>
+
+    <!--        rename file modal starts here-->
+
+                <!-- Button trigger modal2 -->
+          <button type="button" class="btn btn" data-toggle="modal" data-target="#exampleModal7{{basename}}"><i class="fas fa-edit fa-2x"></i></button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="exampleModal7{{basename}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel7{{basename}}" aria-hidden="true">
+            <div class="modal-dialog" id="{{basename}}">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel7"><strong>Rename File</strong></h5>
+                    <div class="buttons">
+        
+                        <button type="button" class="btn btn-close-dark" data-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark fa-2x"></i></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                   <form method="post" enctype="multipart/form-data" action="{% url 'rename' link_target %}">
+                    {% csrf_token %}
+
+                    <input type="text" name="newfolder_name" placeholder="Enter New File Name">
+
+                   <button type="submit" class="btn btn-secondary">Rename</button>
+
+                  </form>
+                  
+                </div>
+
+              </div>
+            </div>
+          </div>
+<!--        modal ends here-->
+  </td>
+
+
+
+<td>
+    <form method="post" action="{% url 'delete' link_target %}">
+      {% csrf_token %}
+
+        <button type="submit" class="btn btn" id="delete"><i class="fa-solid fa-trash fa-2x"></i></button>
+    </form>
+</td>
+
+<td>
+<!--        move folder modal starts here-->
+
+                <!-- Button trigger modal2 -->
+
+          <button type="button" class="btn btn" data-toggle="modal" data-target="#exampleModal8{{basename}}"><i class="fa-solid fa-scissors fa-2x"></i></button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="exampleModal8{{basename}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel8{{basename}}" aria-hidden="true">
+            <div class="modal-dialog" id="{{basename}}">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel8"><strong>Move Folder</strong></h5>
+                    <div class="buttons">
+                  
+                        <button type="button" class="btn btn-close-dark" data-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark fa-2x"></i></button>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                   <form method="post" action="{% url 'move' link_target %}">
+                    {% csrf_token %}
+
+                    <input type="text" name="newfolder_name" placeholder="Enter Destination Name">
+
+                   <button type="submit" class="btn btn-secondary">Move</button>
+
+                  </form>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+<!--        modal ends here-->
+                            </td>
+
+
+
+
+
+</tr>
+{% endfor %}
+{% for basename, link_target in directory_files %}
+<tr>
+    <td>
+        <input type ="checkbox" value="{{ link_target }}" name="itemcheckbox">
+    </td>
+  <td>
+  {% if link_target %}
+
+<!--    this section deals with displaying the files when you open a folder-->
+
+
+<h5><a href="{% url 'directory_browse' link_target %}" style="text-decoration:none;color:black;">{{ basename }}</a></h5>
+  {% else %}
+    <h5>{{basename}}</h5>
+  {% endif %}
+  </td>
+  <td>
+
+    <!--        rename file modal starts here-->
+
+                <!-- Button trigger modal2 -->
+          <button type="button" class="btn btn" data-toggle="modal" data-target="#exampleModal4{{basename}}"><i class="fas fa-edit fa-2x"></i></button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="exampleModal4{{basename}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel4{{basename}}" aria-hidden="true">
+            <div class="modal-dialog" id="{{basename}}">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel4"><strong>Rename File</strong></h5>
+                    <div class="buttons">
+                      
+                        <button type="button" class="btn btn-close-dark" data-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark fa-2x"></i></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                   <form method="post" enctype="multipart/form-data" action="{% url 'rename' link_target %}">
+                    {% csrf_token %}
+
+                    <input type="text" name="newfolder_name" placeholder="Enter New File Name">
+
+                   <button type="submit" class="btn btn-secondary">Rename</button>
+
+                  </form>
+                 
+                </div>
+              </div>
+            </div>
+          </div>
+<!--        modal ends here-->
+
+  </td>
+<!--    delete starts here-->
+  <td>
+    <form method="post" action="{% url 'delete' link_target %}">
+      {% csrf_token %}
+        <button type="submit" class="btn btn" id="delete"><i class="fa-solid fa-trash fa-2x"></i></button>
+    </form>
+  </td>
+
+
+    <td>
+<!--        move file modal starts here-->
+
+                <!-- Button trigger modal2 -->
+
+          <button type="button" class="btn btn" data-toggle="modal" data-target="#exampleModal9{{basename}}"><i class="fa-solid fa-scissors fa-2x"></i></button>
+
+          <!-- Modal -->
+          <div class="modal fade" id="exampleModal9{{basename}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel9{{basename}}" aria-hidden="true">
+            <div class="modal-dialog" id="{{basename}}">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel9"><strong>Move File</strong></h5>
+                    <div class="buttons">
+              
+                        <button type="button" class="btn btn-close-dark" data-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark fa-2x"></i></button>
+                    </div>
+
+                </div>
+
+                <div class="modal-body">
+                   <form method="post" action="{% url 'move' link_target %}">
+                    {% csrf_token %}
+
+                    <input type="text" name="newfolder_name" placeholder="Enter Destination Name">
+
+                   <button type="submit" class="btn btn-secondary">Move</button>
+
+                  </form>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+<!--        modal ends here-->
+                            </td>
+
+
+
+
+
+
+
+  <td>
+
+<!--    share modal starts here-->
+    <!-- Button trigger modal -->
+      <button type="button" class="btn btn" data-toggle="modal" data-target="#exampleModal">
+        <i class="fa-solid fa-share fa-2x"></i>
+      </button>
+
+      <!-- Modal -->
+      <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"><strong>Share File</strong></h5>
+                <div class="buttons">
+                    <button type="button" class="btn btn-close-dark" data-dismiss="modal" aria-label="Close"><i class="fa-solid fa-xmark fa-2x"></i></button>
+                </div>
+            </div>
+            <div class="modal-body">
+              <table class="table mb-0">
+                <td>
+                  <button type="submit" class="btn btn">{% post_to_facebook object_or_url '<i class="fa-brands fa-facebook-f fa-2x" style="color:black;"></i>' %}</button>
+                </td>
+                <td>
+                  <button type="submit" class="btn btn">{% post_to_twitter "New Notice: {{object.title}}. Check it out!" object_or_url '<i class="fa-brands fa-twitter fa-2x" style="color:black;"></i>' %}</button>
+                </td>
+                <td>
+                  <button type="submit" class="btn btn">{% post_to_whatsapp object_or_url '<i class="fa-brands fa-whatsapp fa-2x" style="color:black;"></i>' %}</button>
+                </td>
+                <td>
+                  <button type="submit" class="btn btn">{% post_to_telegram "New Notice: {{object.title}}. Check it out!" object_or_url '<i class="fa-brands fa-telegram fa-2x" style="color:black;"></i>' %}</button>
+                </td>
+                <td>
+                  <button type="submit" class="btn btn">{% send_email object.title "New Song: {{object.title}}. Check it out!" object_or_url '<i class="fa-solid fa-envelope fa-2x" style="color:black;"></i>' %}</button>
+                </td>
+            <td>
+
+              </table>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+<!--    modal ends here-->
+  </td>
+
+
+</tr>
+
+{% endfor %}
+  </tbody>
+
+</table>
+</div>
+
+<!-- message display for when the user is not logged in -->
+ {% else %}
+    <br>
+    <br>
+    <h1><strong>Please log in to view your files or sign up if you do not have an account.</strong></h1>
+    <br>
+    <br>
+    <br>
+    {% endif %}
+
+<!-- script  to handle batch and single downloads -->
+  <script>
+      var actionBtn = document.getElementById("submitAction");
+      var actionForm = document.getElementById("actionForm");
+      var selectionAction = document.getElementById("selectAction");
+      var selectAllCheckbox = document.getElementById("selectAll");
+      var selectedCount = document.getElementById("selectedCount");
+      var checkboxes = document.querySelectorAll('input[name=itemcheckbox]');
+      var targetField = document.getElementById("fileTargets");
+
+      
+      //handle dropdown button
+      actionBtn.addEventListener("click", function(){ //perform mass action
+      //alert("You clicked download!");
+    
+      var checkedBoxes = document.querySelectorAll('input[name=itemcheckbox]:checked');
+      //alert("You clicked download!");
+
+      if(checkedBoxes.length == 0){
+        alert("No boxes selected");}
+      else{
+          var targets = [];
+          for(var i=0; i<checkedBoxes.length; i++){
+              targets.push(checkedBoxes[i].value);
+          }
+          alert(targets.toString());
+          //switch to control actions
+          //switch(action){
+    
+          //  console.log(targets)
+           download(targets);
+
+          }
+      }
+);
+
+// handle the select all/desetect all functionality
+  selectAllCheckbox.addEventlistener("click",function(){
+  var checked = selectAllCheckbox.checked;
+  var chockedBoxes = document.querySelectorAll('input[nane=itemcheckbox]');
+  for (var i = 0; i < checkedBoxes.Length; i++) {
+  checkedBoxes[i].checked = checked;
+  }
+  updateSelectedCount();
+  });
+
+  // update the counter if any checkbox is clicked
+  checkboxes.forEach(function(checkbox){
+  checkbox.addEventListener('click', function() {
+  updateSelectedCount();
+  })
+  });
+
+  function updateSelectedCount(){
+      let checkedBoxes = document.querySelectorAll('input[nane=itemcheckbox]:checked');
+      selectedCount.textContent=checkedBoxes.Length;
+  }
+
+  // download method dealing with cheched items
+  function download(targets){
+      let numCheckBoxes = targets.Length;
+      let r = confirm("Are you sure you want to download?")
+      if (r == true) {
+      actionForm.action = "{%url 'batch_download' %}";
+      targetField.value = targets.join(",");
+      actionForm.submit();
+  }
+}
+
+
+
+
+
+</script>
+
+</body>
+
+<script>
+    
+</script>
+{% endblock %}
+</html>
